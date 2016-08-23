@@ -1,0 +1,108 @@
+The Fall 2014 project is to create code to play and handle the new and mediocre game: HyperChess(tm).
+
+This document is not final, and will probably never be considered final. The customer is fickle or just forgets to include all the details or doesn't know the full extent of what needs to be done. Note that many of the internals are not specified.
+
+The majority of points (80%) will be awarded for the correct underlying data structures and their handling. The game code itself is only worth 20% of the total points.
+
+While some of the underlying implementation is at your discretion, the Board class must be handled as a graph of nodes.
+
+Board will contain a single Node object that refers to the location on the Board at (0,0,0). You may also store a variable to retain the number of Node objects that exist and are accessible from your single Node object. Therefore, the Board class only contains 2 instance/member variables!
+
+A Node is a representation of a cube in 3-dimensional space. The Node must maintain links to who it is adjacent to and what Piece, if any, is at the location of the Node.
+
+Adjacency is referred to as what is to the left, right, up, down, in and out from the Node. This is the order that the input files will provide adjacency information.
+
+To clarify, for a Node at position (0,0,0):
+left	->	(-1,  0,  0)
+right	->	( 1,  0,  0)
+up		->	( 0, -1,  0)
+down	->	( 0,  1,  0)
+in		->	( 0,  0, -1)
+out		->	( 0,  0,  1)
+
+The public interface for Node is as follows
+	Node(): Creates Node and sets all values to null.
+	Node(Piece): Creates a Node with all adjacency values set to null. The Piece given is considered to be contained within that Node.
+	Accessors:	getLeft(), getRight(), getUp(), getDown(), getIn(), getOut()
+	Mutators:	setLeft(Node), setRight(Node), setUp(Node), setDown(Node), setIn(Node), setDown(Node)
+	toString(): Returns the toString for the Piece contained within the Node. Returns "null" if there is no piece inside the Node.
+
+A Node can have nothing in it, or it can have a game Piece within it. 
+
+Abstract Class Piece:
+	protected Node at
+	protected String team
+	toString(): Returns a String containing the color and name of piece as follows: a black knight would be returned as "BKnight".
+	abstract boolean canMoveTo(Node): Returns true if this Piece can move from it's current location to the specified Node.
+	abstract boolean moveTo(Node): Same as canMoveTo(Node), but actually moves the Piece.
+
+Each Piece sub-type will have their own class: Pawn, Rook, Knight, Bishop, Queen, King.
+Sub-Piece Specification:
+	Constructor(String): Creates the Piece and location null. String indicates what color the Piece is and can be given as any capitalization of the two possible colors "black" and "white". If a proper String is not provided, you do not crash but you must ensure that a null pointer exception occurs if the Piece is used. NOTE: The color of the Piece can not be changed.
+	Constructor(String, Node): Same as prior constructor but places the Piece at the specified Node. This means that the Node contains a reference to this Piece and this Piece contains a reference to that Node.
+	setLocation(Node): Change the location of the Piece to the specified Node.
+
+
+Rules for moving Pieces:
+Each Piece has it's own rules for movement, however, be aware that no Piece may leave the Board in order to complete a move. Nor may they travel through a non-existent location in order to reach a location.
+A Piece can not move through another Piece (except where specified) and can only end the move in an empty space or a space occupied by an enemy Piece, which is lost and removed from the Board.
+Pawn: Can move 1 space in any direction.
+Rook: Can move any number of spaces in a single direction.
+Knight: Moves in an L. Meaning, 2 spaces in one direction and then 1 space in some perpendicular dimension. The Knight can move through any other Pieces (without interaction) in order to get to it's final location.
+Bishop: Can move any number of spaces diagonally. To move diagonally, 2 or 3 of the coordinates of the Piece must change to the same absolute degree. 
+Queen: Can move like a Rook and a Bishop.
+King: Can move 1 space in any direction. 
+
+
+The Board class contains the following:
+	private Node: Indicates the Node at 0,0,0 of the Board.
+	private int: Indicates the number of Node objects contained by the Board (that are accessible from our starting position, inclusive).
+	Board(Scanner): This constructor takes in a Scanner object that has the structure specified in the Map file and creates all the appropriate Node objects and linkages between them.
+	private Board(): This constructor should do nothing and will not be used but must be provided.
+	toString(): Generates a String that represents the current state of the Board, the specification of such is provided under "currentstate".
+	save(String): Saves the current game into a String that can be written to a file.
+	load(String): Converts a String into a valid Board. This will essentially overwrite the contents of the Board object. This loads the saved state back into the program.
+	main(): Initializes the game environment and starts the game sequence.
+		If an argument is provided, it is assumed to be a Map file and the Board will be created with that Map file and the game will start with the move by white.
+		If no argument is provided, it will load the saved state of the game, if available. Otherwise, it will report that no source Map was provided and no save state was available. Exit with error code -1.
+		Once the game begins, as long as both players still have a King, the current player must select one of their pieces and move it into a valid position. You do not have to prohibit players from moving into check. If the King is taken, that player wins and the game saves the currentstate as "endgame" and exits. Play then moves to the next player, until some player wins.
+		No special moves, such as castling or queening need to be accounted for. Just keep the game nice and simple.
+
+
+Movements:
+	When it is a player's turn, the current state of the game is generated from toString and saved into "currentstate", you may also print this to the screen. The player will enter the coordinates of a piece that they want to move. The piece must belong to them, otherwise, ask again. Then the player will indicate the coordinates of the piece's destination. If this is valid, move the piece and go to the next player. If it is not valid, ask the player for the piece they want to move again (start from the beginning).
+
+Map file:
+The Map files contain the layout of a given game Board. On the first line is a number specifying the Node objects contained in the Board.
+Each following line contains a Node as specified:
+NodeID	Left	Right	Up	Down	In	Out	Piece
+
+Except for Piece, which is the String that describes a Piece (WPawn, BKnight), each value reflects a Node. If a link is -1, that means that no connection exists.
+
+currentstate:
+currentstate is a file generated from Board::toString(). It contains several lines of data, each line represents a Node object. The data is as follows:
+X	Y	Z	Piece
+X, Y and Z are the coordinates of the Node, Piece is the textual description of the Piece at a given location, "null" if no piece exists at that Node.
+
+Visualizer:
+The Visualizer is a python file that can be excuted in a GUI environment to show the current state of the board. It will always look for the file "currentstate" and use that to generate the view. This requires pygame and python to be installed.
+
+Goals Timeline:
+	October:
+		17th:	Finish reviewing assignment and specification questions.
+		24th:	Build Piece classes (not movement yet), Node class
+		31st:	Board class: Reading Map files
+	November:
+		7th:	Board class: toString(), save/load
+		14th:	Add movement support to the Piece Classes
+		21st:	Game turns, back and forth.
+		28th:	Eat a Turkey or a tofurkey.
+	December:
+		5th:	Finish loose ends and follow the path to victory.
+		8th:	Submit assignment.
+
+	
+
+
+
+
